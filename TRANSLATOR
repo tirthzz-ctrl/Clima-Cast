@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Weather App with 7-Day Forecast & Fun Lines</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet" />
+
+<style>
+  :root {
+    --bg-gradient: linear-gradient(135deg, #000000, #c8c8b5);
+    --bg-color: #ffffff;
+    --text-color: #222;
+    --card-bg: #fff;
+    --shadow-color: rgba(0,0,0,0.2);
+    --primary-color: #333;
+  }
+
+  body.dark-mode {
+    --bg-gradient: linear-gradient(135deg, #2c3e50, #34495e);
+    --bg-color: #222;
+    --text-color: #eee;
+    --card-bg: #333;
+    --shadow-color: rgba(0,0,0,0.4);
+    --primary-color: #eee;
+  }
+
+  body {
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
+    background: var(--bg-gradient);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 30px;
+    transition: background 0.5s ease;
+    position: relative;
+  }
+
+  /* Mode toggle button */
+  #modeToggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--card-bg);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 600;
+    box-shadow: 0 4px 8px var(--shadow-color);
+    z-index: 10;
+    transition: background 0.3s, color 0.3s;
+  }
+  #modeToggle:hover {
+    background: #555;
+    color: #fff;
+  }
+
+  /* Main card container */
+  .card {
+    background: var(--card-bg);
+    border-radius: 20px;
+    max-width: 520px;
+    width: 100%;
+    padding: 30px;
+    box-shadow: 0 8px 20px var(--shadow-color);
+    transition: box-shadow 0.3s ease, background 0.3s ease, transform 0.3s ease;
+  }
+  .card:hover {
+    box-shadow: 0 12px 25px var(--shadow-color);
+    transform: translateY(-5px);
+  }
+
+  h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: var(--primary-color);
+  }
+
+  /* Controls: city select & custom location input & toggle temp */
+  .controls {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 25px;
+  }
+
+  .controls-top {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  select, input[type="text"], button {
+    padding: 12px 20px;
+    border-radius: 10px;
+    border: none;
+    font-size: 1rem;
+    outline: none;
+    cursor: pointer;
+    transition: box-shadow 0.2s ease, background 0.3s;
+  }
+
+  select:hover, input[type="text"]:hover, button:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+
+  /* Weather display area */
+#weatherDisplay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+#weatherDisplay.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Weather icon styling */
+#icon {
+  width: 120px;
+  height: 120px;
+  margin-bottom: 10px;
+  transition: transform 0.3s ease;
+}
+#icon:hover {
+  transform: scale(1.1);
+}
+
+/* Location & temperature styling */
+#location {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 15px 0 10px 0;
+  color: var(--primary-color);
+  transition: color 0.3s ease;
+}
+#temp {
+  font-size: 3.2rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: var(--primary-color);
+  transition: color 0.3s ease;
+}
+#description {
+  font-size: 1.2rem;
+  font-style: italic;
+  margin-bottom: 20px;
+  color: var(--primary-color);
+  transition: color 0.3s ease;
+}
+
+/* Fun message */
+#funMessage {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin: 15px 0;
+  text-align: center;
+  color: #e74c3c;
+}
+
+/* 7-Day forecast container */
+#forecastContainer {
+  width: 100%;
+  margin-top: 20px;
+}
+#forecast {
+  display: flex;
+  overflow-x: auto;
+  gap: 10px;
+  padding-bottom: 10px;
+}
+.day {
+  flex: 0 0 auto;
+  background: #f0f0f0;
+  padding: 8px;
+  border-radius: 10px;
+  min-width: 80px;
+  text-align: center;
+  font-size: 0.9rem;
+  transition: background 0.2s ease;
+}
+body.dark-mode .day {
+  background: #555;
+  color: #eee;
+}
+.day:hover {
+  background: #ddd;
+}
+body.dark-mode .day:hover {
+  background: #666;
+}
+
+/* Additional info cards */
+#additional {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
+  width: 100%;
+}
+.info-item {
+  background: #f0f0f0;
+  padding: 12px 20px;
+  border-radius: 15px;
+  min-width: 120px;
+  text-align: center;
+  font-size: 0.95rem;
+  transition: background 0.2s ease, color 0.3s ease;
+  color: #222;
+}
+body.dark-mode .info-item {
+  background: #555;
+  color: #eee;
+}
+.info-item:hover {
+  background: #e0e0e0;
+}
+body.dark-mode .info-item:hover {
+  background: #666;
+}
+
+/* Loading indicator */
+#loading {
+  font-size: 1.2rem;
+  color: var(--primary-color);
+  margin-top: 20px;
+  display: none;
+}
+
+/* Animation keyframes */
+@keyframes fadeInUp {
+  from {opacity: 0; transform: translateY(20px);}
+  to {opacity: 1; transform: translateY(0);}
+}
+</style>
+</head>
+<body>
+
+<!-- Mode toggle button -->
+<button id="modeToggle">Dark Mode</button>
+
+<div class="card">
+  <h2>-ClimaCast-</h2>
+  
+  <!-- Controls -->
+  <div class="controls">
+    <div class="controls-top">
+      <select id="citySelect">
+        <option value="London">London</option>
+        <option value="New York">New York</option>
+        <option value="Tokyo">Tokyo</option>
+        <option value="Paris">Paris</option>
+        <option value="Sydney">Sydney</option>
+        <option value="Kolkata">Kolkata</option>
+        <option value="Your Location">Your Location</option>
+      </select>
+      
+      <!-- Hidden input for custom location -->
+      <input type="text" id="customLocation" placeholder="Type your location" style="display:none; flex:1;" />
+      
+      <button id="setLocationBtn" style="display:none;">Set Location</button>
+      
+      <button id="toggleTemp">Show in °C</button>
+    </div>
+  </div>
+
+  <!-- Fun message -->
+  <div id="funMessage">Welcome! Let's see the weather!</div>
+
+  <!-- Weather info -->
+  <div id="loading">Loading...</div>
+  <div id="weatherDisplay">
+    <img id="icon" src="" alt="Weather Icon" />
+    <div id="location"></div>
+    <div id="temp"></div>
+    <div id="description"></div>
+    <div id="funMessage2" style="margin:10px;font-size:1rem;font-weight:600;text-align:center;"></div>
+    <div id="additional">
+      <div class="info-item" id="humidity"></div>
+      <div class="info-item" id="wind"></div>
+      <div class="info-item" id="feelslike"></div>
+    </div>
+    <!-- Forecast container -->
+    <div id="forecastContainer">
+      <h3 style="margin-top:20px; text-align:center; color:var(--primary-color);">7-Day Forecast</h3>
+      <div id="forecast"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const apiKey = '09cba8d1378643a6849195052253107';
+
+  const weatherDiv = document.getElementById('weatherDisplay');
+  const locationDiv = document.getElementById('location');
+  const tempDiv = document.getElementById('temp');
+  const descDiv = document.getElementById('description');
+  const iconImg = document.getElementById('icon');
+  const humidityDiv = document.getElementById('humidity');
+  const windDiv = document.getElementById('wind');
+  const feelsLikeDiv = document.getElementById('feelslike');
+  const loadingDiv = document.getElementById('loading');
+  const toggleBtn = document.getElementById('toggleTemp');
+  const modeBtn = document.getElementById('modeToggle');
+  const citySelect = document.getElementById('citySelect');
+  const customInput = document.getElementById('customLocation');
+  const setLocationBtn = document.getElementById('setLocationBtn');
+
+  const funMessageDiv = document.getElementById('funMessage');
+  const funMessage2Div = document.getElementById('funMessage2');
+  const forecastContainer = document.getElementById('forecast');
+
+  let currentTempC = null; // Celsius
+  let isFahrenheit = false;
+  let isDarkMode = false;
+
+  function fetchWeather(city) {
+    loadingDiv.style.display = 'block';
+    weatherDiv.classList.remove('show');
+    forecastContainer.innerHTML = '';
+
+    if (!city || city === "Your Location") {
+      if (city === 'Your Location' && customInput.style.display === 'block' && customInput.value.trim() !== '') {
+        city = customInput.value.trim();
+        customInput.value = '';
+        fetchWeatherData(city);
+        return;
+      } else if (city === 'Your Location' && customInput.style.display === 'none') {
+        customInput.style.display = 'block';
+        setTimeout(() => { customInput.focus(); }, 100);
+        return;
+      } else {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              const { latitude, longitude } = pos.coords;
+              getWeatherByCoords(latitude, longitude);
+            },
+            () => {
+              loadingDiv.style.display = 'none';
+              alert('Geolocation access denied.');
+            }
+          );
+        } else {
+          loadingDiv.style.display = 'none';
+          alert('Geolocation not supported.');
+        }
+        return;
+      }
+    }
+
+    fetch(`https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${encodeURIComponent(city)}&days=7`)
+      .then(res => res.json())
+      .then(data => updateWeather(data))
+      .catch(() => {
+        loadingDiv.style.display = 'none';
+        alert('Error fetching weather data.');
+      });
+  }
+
+  function getWeatherByCoords(lat, lon) {
+    fetch(`https://api.weatherapi.com/v1/forecast.json?key=${apiKey}&q=${lat},${lon}&days=7`)
+      .then(res => res.json())
+      .then(data => updateWeather(data))
+      .catch(() => {
+        loadingDiv.style.display = 'none';
+        alert('Error fetching weather data.');
+      });
+  }
+
+  function updateWeather(data) {
+    currentTempC = data.current.temp_c;
+    isFahrenheit = false;
+    locationDiv.innerText = `${data.location.name}, ${data.location.region}`;
+    updateTemperatureDisplay();
+    descDiv.innerText = data.current.condition.text;
+    iconImg.src = data.current.condition.icon;
+    iconImg.alt = data.current.condition.text;
+    humidityDiv.innerText = `Humidity: ${data.current.humidity}%`;
+    windDiv.innerText = `Wind: ${data.current.wind_kph} kph`;
+    feelsLikeDiv.innerText = `Feels like: ${data.current.feelslike_c} °C`;
+
+    // Determine day or night
+    if (typeof data.current.is_day !== 'undefined') {
+      if (data.current.is_day == 0) {
+        document.body.classList.add('dark-mode');
+        isDarkMode = true;
+        document.getElementById('modeToggle').innerText = 'Light Mode';
+      } else {
+        document.body.classList.remove('dark-mode');
+        isDarkMode = false;
+        document.getElementById('modeToggle').innerText = 'Dark Mode';
+      }
+    } else {
+      const localTimeStr = data.location.localtime;
+      const hour = parseInt(localTimeStr.split(' ')[1].split(':')[0]);
+      if (hour >= 19 || hour <= 6) {
+        document.body.classList.add('dark-mode');
+        isDarkMode = true;
+        document.getElementById('modeToggle').innerText = 'Light Mode';
+      } else {
+        document.body.classList.remove('dark-mode');
+        isDarkMode = false;
+        document.getElementById('modeToggle').innerText = 'Dark Mode';
+      }
+    }
+
+    // Display fun message based on weather
+    displayFunMessage(data);
+
+    // Generate 7-day forecast
+    generateForecast(data.forecast.forecastday);
+
+    // Animate weather info
+    weatherDiv.style.animation = 'fadeInUp 0.6s forwards';
+    setTimeout(() => {
+      loadingDiv.style.display = 'none';
+      weatherDiv.classList.add('show');
+    }, 200);
+  }
+
+  function updateTemperatureDisplay() {
+    if (currentTempC === null) return;
+    if (isFahrenheit) {
+      const tempF = (currentTempC * 9/5) + 32;
+      tempDiv.innerText = `${tempF.toFixed(1)} °F`;
+      toggleBtn.innerText = 'Show in °C';
+    } else {
+      tempDiv.innerText = `${currentTempC.toFixed(1)} °C`;
+      toggleBtn.innerText = 'Show in °F';
+    }
+  }
+
+  function displayFunMessage(data) {
+    const conditionCode = data.current.condition.code;
+    let message = '';
+    // Example fun lines based on weather condition code
+    if (conditionCode === 1000) { // clear
+      message = "It's sunny! Perfect day for ice cream.";
+    } else if ([1003, 1006, 1009].includes(conditionCode)) { // cloudy, fog
+      message = "Cloudy skies. Maybe stay in with a good book.";
+    } else if ([1183, 1186, 1189].includes(conditionCode)) { // rain
+      message = "LOOKS LIKE YOU NEED AN UMBRELLA!";
+    } else if ([1273, 1276].includes(conditionCode)) { // thunderstorm
+      message = "Thunderstorms! Stay safe and dry.";
+    } else if ([1135, 1147].includes(conditionCode)) { // fog/mist
+      message = "Foggy! Drive carefully.";
+    } else {
+      message = getRandomFunLine();
+    }
+    document.getElementById('funMessage').innerText = message;
+  }
+
+  function getRandomFunLine() {
+    const lines = [
+      "Weather's unpredictable! Stay prepared!",
+      "Remember: a sunny outlook starts with a sunny day.",
+      "Time for a nap or a snack!",
+      "Weather or not, you're awesome!",
+      "Stay cozy, no matter the weather.",
+      "Look on the bright side!",
+      "Rain or shine, keep smiling!"
+    ];
+    return lines[Math.floor(Math.random() * lines.length)];
+  }
+
+  function generateForecast(forecastDays) {
+    forecastContainer.innerHTML = '';
+    forecastDays.forEach(day => {
+      const dateStr = day.date; // YYYY-MM-DD
+      const date = new Date(dateStr);
+      const options = { weekday: 'short' };
+      const dayName = date.toLocaleDateString(undefined, options);
+      const iconSrc = day.day.condition.icon;
+      const maxTemp = day.day.maxtemp_c;
+      const minTemp = day.day.mintemp_c;
+      const forecastDiv = document.createElement('div');
+      forecastDiv.className = 'day';
+      forecastDiv.innerHTML = `
+        <div style="font-weight:600;">${dayName}</div>
+        <img src="${iconSrc}" alt="${day.day.condition.text}" style="width:50px;height:50px;" />
+        <div>${maxTemp.toFixed(1)}° / ${minTemp.toFixed(1)}°</div>
+      `;
+      forecastContainer.appendChild(forecastDiv);
+    });
+  }
+
+  // Event Listeners
+  document.getElementById('citySelect').addEventListener('change', () => {
+    const val = document.getElementById('citySelect').value;
+    if (val === 'Your Location') {
+      customInput.style.display = 'block';
+      customInput.focus();
+    } else {
+      customInput.style.display = 'none';
+      fetchWeather(val);
+    }
+  });
+
+  document.getElementById('setLocationBtn').onclick = () => {
+    const loc = customInput.value.trim();
+    if (loc !== '') {
+      fetchWeather(loc);
+      customInput.style.display = 'none';
+    }
+  };
+
+  customInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      document.getElementById('setLocationBtn').click();
+    }
+  });
+
+  document.getElementById('toggleTemp').addEventListener('click', () => {
+    isFahrenheit = !isFahrenheit;
+    updateTemperatureDisplay();
+  });
+
+  // Mode toggle manually
+  document.getElementById('modeToggle').onclick = () => {
+    document.body.classList.toggle('dark-mode');
+    isDarkMode = !isDarkMode;
+    document.getElementById('modeToggle').innerText = isDarkMode ? 'Light Mode' : 'Dark Mode';
+  };
+
+  // Load default weather
+  window.onload = () => {
+    fetchWeather(document.getElementById('citySelect').value);
+  };
+</script>
+
+<!-- JotForm chat widget -->
+<script src='https://cdn.jotfor.ms/agent/embedjs/0198621b561e7045accb617a80010b52f681/embed.js?skipWelcome=1&maximizable=1'></script>
+</body>
+</html>
