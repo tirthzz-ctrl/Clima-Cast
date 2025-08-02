@@ -1,6 +1,4 @@
-Certainly! Here's a comprehensive GitHub repository description (README) for your weather website "ClimaCast", including bullet points and detailed explanations:
 
----
 
 # ClimaCast
 
@@ -99,4 +97,4 @@ This project is open-source and available for modification and distribution. Fee
 
 ---
 
-Feel free to customize this README further to match your project's specifics or add any additional sections!
+
